@@ -151,43 +151,49 @@ def upload_to_qdrant(collection_name: str, structured_data: CounselingData):
 # ==========================================
 
 if __name__ == "__main__":
-    # 1. 분석할 유튜브 URL 입력
-    TARGET_URL = "https://www.youtube.com/watch?v=S_LT81xK8LQ" # 테스트용 URL
-    
-    # 2. 오디오 다운로드
-    audio_file = download_audio_from_youtube(TARGET_URL)
-    
-    if audio_file and os.path.exists(audio_file):
-        try:
-            # 3. STT 변환 (Local Whisper)
-            raw_script = transcribe_with_local_whisper(audio_file, model_size="base")
-            
-            if raw_script:
-                print(f"\n--- 추출된 텍스트 길이: {len(raw_script)} 자 ---")
-                # raw_script를 텍스트 파일로 저장 (검토용)
-                txt_path = os.path.splitext(audio_file)[0] + "_raw_script.txt"
-                try:
-                    with open(txt_path, "w", encoding="utf-8") as f:
-                        f.write(raw_script)
-                    print(f"📄 Raw script saved to {txt_path}")
-                except Exception as e:
-                    print(f"⚠️ Failed to save raw script: {e}")
-                
-                # 4. 데이터 구조화 (GPT-4o)
-                structured_data = extract_structured_data(raw_script)
-                
-                # 확인용 출력
-                print(json.dumps(structured_data.model_dump(by_alias=True), indent=2, ensure_ascii=False))
-                
-                # 5. DB 저장
-                upload_to_qdrant("love_counseling_db", structured_data)
-                
-            else:
-                print("❌ 스크립트 추출 실패")
+    url_list = list()
+    # 1. 분석할 유튜브 URL 리스트 입력
+    url_list.extend(
+        [
 
-        finally:
-            # 임시 파일 삭제
-            if os.path.exists(audio_file):
-                os.remove(audio_file)
-    else:
-        print("❌ 오디오 파일 준비 실패")
+        ]
+    )
+
+    for target_url in url_list:
+        # 2. 오디오 다운로드
+        audio_file = download_audio_from_youtube(target_url)
+        
+        if audio_file and os.path.exists(audio_file):
+            try:
+                # 3. STT 변환 (Local Whisper)
+                raw_script = transcribe_with_local_whisper(audio_file, model_size="base")
+                
+                if raw_script:
+                    print(f"\n--- 추출된 텍스트 길이: {len(raw_script)} 자 ---")
+                    # raw_script를 텍스트 파일로 저장 (검토용)
+                    txt_path = os.path.splitext(audio_file)[0] + "_raw_script.txt"
+                    try:
+                        with open(txt_path, "w", encoding="utf-8") as f:
+                            f.write(raw_script)
+                        print(f"📄 Raw script saved to {txt_path}")
+                    except Exception as e:
+                        print(f"⚠️ Failed to save raw script: {e}")
+                    
+                    # 4. 데이터 구조화 (GPT-4o)
+                    structured_data = extract_structured_data(raw_script)
+                    
+                    # 확인용 출력
+                    print(json.dumps(structured_data.model_dump(by_alias=True), indent=2, ensure_ascii=False))
+                    
+                    # 5. DB 저장
+                    upload_to_qdrant("love_counseling_db", structured_data)
+                    
+                else:
+                    print("❌ 스크립트 추출 실패")
+
+            finally:
+                # 임시 파일 삭제
+                if os.path.exists(audio_file):
+                    os.remove(audio_file)
+        else:
+            print("❌ 오디오 파일 준비 실패")

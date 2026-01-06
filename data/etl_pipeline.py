@@ -155,7 +155,47 @@ if __name__ == "__main__":
     # 1. 분석할 유튜브 URL 리스트 입력
     url_list.extend(
         [
-
+            # 승룡
+            "https://www.youtube.com/watch?v=ahjfeeDXvkU",
+            "https://www.youtube.com/watch?v=jOuRvDJXqRg",
+            "https://www.youtube.com/watch?v=yPN1sZI8mcE",
+            "https://www.youtube.com/watch?v=WNfYx5-R3iI",
+            "https://www.youtube.com/watch?v=Z6uMDiX4tF8",
+            "https://www.youtube.com/watch?v=GTEKLzTo7dc",
+            "https://www.youtube.com/watch?v=tGqjVKf7lF0",
+            "https://www.youtube.com/watch?v=usxCVVkLj24&t=2s",
+            "https://www.youtube.com/watch?v=NOrYt5t58Oc",
+            "https://www.youtube.com/watch?v=WDuz1HBtZ2w",
+            "https://www.youtube.com/watch?v=w9FfuvZZksg",
+            "https://www.youtube.com/watch?v=l1SmTren1Nk",
+            "https://www.youtube.com/watch?v=KGZKtaz957s",
+            "https://www.youtube.com/watch?v=0wB3-GOihaQ",
+            "https://www.youtube.com/watch?v=GwA7EPDkCXs",
+            "https://www.youtube.com/watch?v=3ed7zZ7Zm70",
+            "https://www.youtube.com/watch?v=IxGRtr8L0WQ",
+            "https://www.youtube.com/watch?v=HOoMZpDZpOk",
+            "https://www.youtube.com/watch?v=5fwgst84w5w",
+            "https://www.youtube.com/watch?v=X3eOrHP_qrY",
+            "https://www.youtube.com/watch?v=K_USnheqcjk",
+            "https://www.youtube.com/watch?v=zVOYm-nBpOo",
+            "https://www.youtube.com/watch?v=wCyE2zmik6Y",
+            "https://www.youtube.com/watch?v=C1P5LDIgz98",
+            "https://www.youtube.com/watch?v=AdO_3vGpNG4",
+            "https://www.youtube.com/watch?v=XXbZAWJ1OdU",
+            "https://www.youtube.com/watch?v=qqXQCxrYmig",
+            "https://www.youtube.com/watch?v=1h3ZoyinpUc",
+            "https://www.youtube.com/watch?v=w1LUIMhrRw4",
+            "https://www.youtube.com/watch?v=ewhtaV1OXy0",
+            "https://www.youtube.com/watch?v=fbh6PCMRAnc",
+            "https://www.youtube.com/watch?v=QmcdMjM3Edw",
+            "https://www.youtube.com/watch?v=rlGvmT8uoJE",
+            "https://www.youtube.com/watch?v=qR9n8CLwpIg",
+            "https://www.youtube.com/watch?v=jOxwCshjyZo",
+            "https://www.youtube.com/watch?v=yEuCrea0zfo",
+            "https://www.youtube.com/watch?v=CwB_AD2wnTw",
+            "https://www.youtube.com/watch?v=sznBwru-_rg",
+            "https://www.youtube.com/watch?v=gPflDEnKgSc",
+            "https://www.youtube.com/watch?v=QeDED_HRl10"
         ]
     )
 

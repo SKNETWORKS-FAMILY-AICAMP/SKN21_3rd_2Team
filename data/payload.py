@@ -22,7 +22,11 @@ class ContextMetadata(BaseModel):
     risk_level: str = Field(description="관계 위험도: 낮음, 중간, 높음, 매우 높음")
 
 
-class CounselingData(BaseModel):
+class CounselingEpisode(BaseModel):
     retrieval: RetrievalMetadata
     content: ContentBody
     context: ContextMetadata
+
+
+class CounselingData(BaseModel):
+    episodes: List[CounselingEpisode] = Field(description="스크립트에서 추출된 모든 상담 에피소드 리스트")

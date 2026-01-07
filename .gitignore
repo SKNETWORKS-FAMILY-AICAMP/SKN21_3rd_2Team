@@ -1,3 +1,8 @@
+# 가상환경
+.venv
+
+# cache
+
 .env
 *.txt
 __pycache__/

@@ -221,6 +221,9 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 ---
 
 # 🤖 수행결과(시연 페이지)
+<img width="1114" height="349" alt="image" src="https://github.com/user-attachments/assets/d528d03a-7f43-4210-a3bc-ca21cfd02017" />
+<img width="1382" height="691" alt="image" src="https://github.com/user-attachments/assets/2717a664-720b-4752-89b0-52ac56bd4d36" />
+
 
 
 <br>
@@ -236,6 +239,7 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 | 이의정 |  |
 | 진승언 |  |
 | 이명준 |  |
+
 
 
 

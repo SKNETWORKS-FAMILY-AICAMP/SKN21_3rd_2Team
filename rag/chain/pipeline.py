@@ -23,13 +23,16 @@ def format_docs(docs):
 
 def create_chain(llm, retriever, prompt):
     """
-    팀원 3의 retriever와 팀원 1,2의 prompt를 주입받아
+    retriever와 prompt를 주입받아
     LCEL을 이용한 RAG 파이프라인을 구성합니다.
     """
+    # LangSmith에서 단계별로 식별하기 위해 run_name 지정
+    llm = llm.with_config({"run_name": "chat_model"})
+
     # 1. Context와 Question을 병렬로 처리하여 프롬프트에 전달
     setup_and_retrieval = RunnableParallel(
         {"context": retriever | format_docs, "question": RunnablePassthrough()}
-    )
+    ).with_config({"run_name": "retrieve_and_prepare"})
 
     # 2. 전체 체인 구성: Retrieval -> Prompt -> LLM -> OutputParser
     chain = (
@@ -37,7 +40,7 @@ def create_chain(llm, retriever, prompt):
         | prompt
         | llm
         | StrOutputParser()
-    )
+    ).with_config({"run_name": "love_counseling_rag"})
     
     return chain
 

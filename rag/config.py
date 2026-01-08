@@ -15,3 +15,8 @@ class Config:
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
     # collection name
     COLLECTION_NAME = os.getenv("COLLECTION_NAME", "love_counseling_db")
+
+    # LangSmith 설정
+    LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "true")
+    LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
+    LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "3rd_pj")

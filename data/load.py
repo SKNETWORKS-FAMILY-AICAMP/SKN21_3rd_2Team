@@ -43,3 +43,4 @@ def upload_to_qdrant(collection_name: str, structured_data):
         points=[PointStruct(id=point_id, vector=vector, payload=payload_dict)]
     )
     print(f"✅ 업로드 완료! ID: {point_id}")
+    return point_id

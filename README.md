@@ -93,7 +93,8 @@
 ### ■ 모쏠 공대남, 5천명과 미팅 후 결혼까지…챗GPT가 다 했다
 
 
-<img src="[data/image/news1.png](https://www.asiae.co.kr/news/img_view.htm?img=2024020108320550685_1706743925.jpg)">
+<img width="745" height="485" alt="image" src="https://github.com/user-attachments/assets/13ba213d-1feb-4dcc-a57d-5b70fe784c0d" />
+
 
 - 러시아 개발자, AI로 '데이트 최적화' 프로포즈, 결혼 계획까지 AI에 맡겨
 
@@ -146,11 +147,7 @@
 
 <br>
 
-
-### 시스템 아키텍처 구조도
-![시스템 아키텍처]()
-
-### 프로젝트 동적 과정
+### 프로젝트 동작 과정
 **1. Preprocessing**: 국내 연애 유튜버 관련 유튜브 콘텐츠들의 음성을 텍스트로 변환하여 JSON 형태로 제작 후 Qdrant를 이용하여 Vector DB로 저장
 
 **2. Retrieval**: BM25, MMR, ReRank을 활용하여 Hybrid 형태로 검색 구현. 
@@ -307,6 +304,7 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 | 이의정 |  이번 프로젝트를 통해서 챗봇의 내부흐름을 제대로 알게되었고 성능개선을 하면서 많은 부분을 배웠던 시간이였던 거 같습니다. |
 | 진승언 |  |
 | 이명준 |  |
+
 
 
 

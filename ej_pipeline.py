@@ -175,7 +175,8 @@ if __name__ == "__main__":
     os.environ["PATH"] = FFMPEG_PATH + os.pathsep + os.environ["PATH"]
     
     # 3. 분석할 유튜브 주소
-    TARGET_URL = "https://www.youtube.com/watch?v=7Q9MhbE8WFg" 
+    TARGET_URL = "https://www.youtube.com/watch?v=p1oZlTKbOJs" 
+
     
     # 4. 파이프라인 실행
     audio_file = download_audio_from_youtube(TARGET_URL)

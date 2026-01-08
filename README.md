@@ -86,6 +86,7 @@
 | **LLM Model**       | [![GPT-4o](https://img.shields.io/badge/GPT--4o-mini%20-412991?style=for-the-badge&logo=openai&logoColor=white)](https://platform.openai.com/) 
 | **Embedding Model** | [![text-embedding-3-small](https://img.shields.io/badge/text--embedding--3--small-00A67D?style=for-the-badge&logo=openai&logoColor=white)](https://platform.openai.com/docs/guides/embeddings) |
 | **Vector DB**       | [![Pinecone](https://img.shields.io/badge/qdrant-0075A8?style=for-the-badge&logo=qdrant&logoColor=white)](https://qdrant.tech/) |
+| **Retrieval**       | [![MMR](https://img.shields.io/badge/mmr-0075A8?style=for-the-badge&logo=mmr&logoColor=white)](https://www.cs.cmu.edu/~jgc/publication/The_Use_MMR_Diversity_Based_LTMIR_1998.pdf) [![BM25](https://img.shields.io/badge/bm25-0075A8?style=for-the-badge&logo=bm25&logoColor=white)](https://en.wikipedia.org/wiki/Okapi_BM25) [![ReRanker](https://img.shields.io/badge/reranker-0075A8?style=for-the-badge&logo=reranker&logoColor=white)](https://huggingface.co/BAAI/bge-reranker-v2-m3) ![HuggingFace](https://img.shields.io/badge/huggingface-%23FFD21E.svg?style=for-the-badge&logo=huggingface&logoColor=white)
 | **Orchestration / RAG** | [![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://www.langchain.com/) |
 | **Development Env** | [![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/) [![Conda](https://img.shields.io/badge/Conda-3EB049?style=for-the-badge&logo=anaconda&logoColor=white)](https://www.anaconda.com/)
 
@@ -206,6 +207,11 @@ chatgpt에게 시스템 프롬프트를 만들어 달라고 하면서, 프롬프
 - 해결 방법 1. DB의 payload를 metadata라는 키로 묶는 랩핑으로 해결.
 - 해결 방법2. langchain 의 load 함수를 쓰지 않고, qdrant api에서 불러오고 document 생성 폼에 맞게 객체 수정
 - 해결 방법1의 시간비용과 llm api 호출 비용때문에 해결방법 2로 시도
+### Retrieval에 대한 중복된 결과 발생 및 실행 속도 저하
+langchain-qdrant 라이브러리에 있는 hybrid 모드에서는 자동으로 겹치는 point를 누락시키지만,<br>
+hybrid mode를 직접 구현하여 MMR + BM25 별로 조회한 후 합칠 때 중복되는 결과가 도출됨.<br>
+게다가 RAG의 정확도를 위해 Cross-encoder 기반 ReRank를 적용하였으나 실행 속도가 느려지는 현상을 발견함.
+- 해결 방법: Parameter tuning 작업 중에 있으므로 추후 개선 예정
 ### 답변이 지나치게 딱딱하고 로봇스러움
 - 해결방법 1. 프롬프트 템플릿에 연애 유튜버나상담가 등 대중적으로 유명한 사람의 이름을 명시하여 유명인의 어투를 따라할 수 있게함.
 - 해결방법 2. 프롬프트 템플릿에 사람과 대화할 때 사용하는 말투를 쓰라고 명시하여, 답변의 뉘앙쓰를 바꿈.
@@ -215,6 +221,7 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 다른 유튜버들을 chatgpt가 잘 몰라서,(질문시 유튜버에 대해 모르면 모른다고 답변하라고 함)<br>
 해당 유튜브의 채널에 있는 동영상에서 스크립트를 하나 다운받아서,<br>
 스크립트도 같이 입력하여 해당 유튜버에 대한 시스템 프롬프트 생성
+
 
 <br>
 
@@ -235,10 +242,11 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 | 이름 | 회고 |
 |----------|-------------|
 | 김승룡 |  |
-| 정덕규 |  |
+| 정덕규 |  이번에 Chatbot의 RAG의 중요한 Retrieval(검색) 부분을 담당하면서 실습으로 구현한 것 외에 느낀 점이 많았습니다. 최적의 성능을 도출하기 위해 Hybrid 방법으로도 시도하였으나 성능 저하 및 중복값이 발견되는 경우가 있었습니다. 처음에 단순한 검색 구현이라서 메소드만 호출하면 된다고 생각했었으나 Qdrant의 JSON으로 저장된 metadata를 payload를 해야 했고 Langchain UI를 직접 모니터링하면서 비교 분석을 하면서 다각도로 Retrieval에 대한 인사이트를 키울 수 있었습니다. 팀원들의 적극적인 도움으로 설계 및 구현에 대한 시각이 달라졌고 앞으로 이 시점에서 어떻게 개선해 나가야할지 목표가 보였습니다. 
 | 이의정 |  |
 | 진승언 |  |
 | 이명준 |  |
+
 
 
 

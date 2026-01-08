@@ -3,8 +3,9 @@ import re
 from qdrant_client import QdrantClient, models
 from dotenv import load_dotenv
 
-# 1. 환경 변수 로드
-load_dotenv()
+# 1. 환경 변수 로드 (utils 폴더 기준 상위 디렉토리의 .env 파일 로드)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # 2. Qdrant 설정
 url = os.getenv("QDRANT_URL")

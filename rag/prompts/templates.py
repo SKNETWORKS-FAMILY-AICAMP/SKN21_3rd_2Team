@@ -12,10 +12,8 @@ PERSONAS_DIR = PROMPTS_DIR / "personas"
 PERSONA_FILE_MAP = {
     "권승현": "kwon_seung_hyun.txt",
     "주우재": "joo_woo_jae.txt",
-    "오늘의 주우재": "joo_woo_jae.txt",
     "강탱의 이야기": "kang_taeng.txt",
     "연애언어TV": "love_lang_tv.txt",
-    "연애언어 TV": "love_lang_tv.txt",
     "김달": "kim_dal.txt",
     "랄라브루스": "lalla_bruce.txt",
     "준우": "jun_woo.txt",
@@ -24,9 +22,8 @@ PERSONA_FILE_MAP = {
     "김유신": "kim_yu_shin.txt",
     "오은영 박사": "oh_en_young.txt",
     "홍차TV": "hong_cha_tv.txt",
-    "홍차 TV": "hong_cha_tv.txt",
     "마튜브": "ma_tube.txt",
-    "오마르의 삶": None,  # 아직 구현되지 않음
+    "오마르의 삶": "omar_life.txt",
 }
 
 

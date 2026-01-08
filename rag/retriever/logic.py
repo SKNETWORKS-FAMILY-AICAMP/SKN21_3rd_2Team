@@ -9,6 +9,8 @@ if project_root not in sys.path:
 
 from rag.config import Config
 from qdrant_client import QdrantClient
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 
 import os
 from langchain_openai import OpenAIEmbeddings
@@ -28,7 +30,6 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 COLLECTION_NAME = "love_counseling_db"
 reranker = CrossEncoder("BAAI/bge-reranker-v2-m3")
-
 
 def bm25_search(query, corpus_docs, k=3):
     tokenized = [d.page_content.split() for d in corpus_docs]
@@ -122,8 +123,12 @@ def operate_retriever(query_text, k=3, verbose=False):
         print(f"[retriever] query: {query_text}")
 
     try:
+        # 🚀 1. Query Rewriting 적용 (검색용 쿼리 생성)
+
         client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=OPENAI_API_KEY)
+        
+        # 🚀 2. 재작성된 쿼리로 벡터 생성
         query_vector = np.array(embeddings.embed_query(query_text))
 
         resp = client.query_points(
@@ -170,8 +175,6 @@ def operate_retriever(query_text, k=3, verbose=False):
             print(f"len(ranked): {len(ranked)}")
         final_docs = [d for _, d in ranked[:k]]
         return final_docs
-
-
 
     except Exception as e:
         print(f"Error: {e}")

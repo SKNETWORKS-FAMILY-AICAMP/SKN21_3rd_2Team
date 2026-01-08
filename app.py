@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from qdrant_client import QdrantClient
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from rag.prompts.templates import PERSONA_FILE_MAP, get_combined_prompt
 
 # 1. 환경 변수 로드
 load_dotenv()
@@ -14,6 +15,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 COLLECTION_NAME = "love_counseling_db"
+
+# 사용 가능한 유튜버 목록 (페르소나 파일이 있는 것만)
+AVAILABLE_YOUTUBERS = [name for name, file in PERSONA_FILE_MAP.items() if file is not None]
 
 # 2. 페이지 설정
 st.set_page_config(page_title="연애 상담소", page_icon="❤️", layout="wide")
@@ -138,8 +142,30 @@ if not st.session_state.intro_done:
 st.markdown("<h1 style='color: #333333 !important;'>❤️ 연애 상담소 ❤️</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
+# 🎯 사이드바: 유튜버(상담사) 선택 기능
+with st.sidebar:
+    st.markdown("### 🎭 상담사 선택")
+    selected_youtuber = st.selectbox(
+        "상담 스타일을 선택하세요:",
+        AVAILABLE_YOUTUBERS,
+        index=AVAILABLE_YOUTUBERS.index("김달") if "김달" in AVAILABLE_YOUTUBERS else 0,
+        help="각 유튜버의 상담 스타일로 답변합니다."
+    )
+    st.markdown(f"**현재 상담사:** {selected_youtuber}")
+    st.markdown("---")
+    st.markdown("💡 상담사마다 다른 말투와 조언 스타일을 제공합니다.")
+
+# 세션 상태에 선택된 유튜버 저장
+if "selected_youtuber" not in st.session_state:
+    st.session_state.selected_youtuber = selected_youtuber
+elif st.session_state.selected_youtuber != selected_youtuber:
+    st.session_state.selected_youtuber = selected_youtuber
+    # 유튜버가 바뀌면 대화 초기화 (선택사항)
+    st.session_state.messages = [{"role": "assistant", "content": f"안녕하세요! {selected_youtuber} 스타일로 상담해드릴게요. 어떤 고민이 있으신가요?"}]
+    st.rerun()
+
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "하트 박사예요. 오늘 어떤 마음의 고민을 들고 왔을까요?"}]
+    st.session_state.messages = [{"role": "assistant", "content": f"안녕하세요! {selected_youtuber} 스타일로 상담해드릴게요. 어떤 고민이 있으신가요?"}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -191,18 +217,30 @@ if prompt := st.chat_input("하트 박사님에게 고민을 나눠보세요..."
         is_counseling = "상담" in intent_check
         
         if is_counseling:
-            # 🔍 RAG 기반 연애 상담 모드
+            # 🔍 RAG 기반 연애 상담 모드 (선택된 유튜버 페르소나 적용)
             context = get_context(prompt)
-            system_prompt = """당신은 연애 상담 전문가 '하트 박사'입니다.
-사용자의 연애 고민에 대해 제공된 [참고 사례]를 바탕으로 따뜻하고 공감적인 상담을 해주세요.
-답변은 존댓말로 하고, 구체적이고 실질적인 조언을 제공하세요."""
+            
+            # 선택된 유튜버의 페르소나 프롬프트 가져오기
+            persona_prompt = get_combined_prompt(st.session_state.selected_youtuber)
+            system_prompt = persona_prompt if persona_prompt else f"""당신은 연애 상담 전문가 '{st.session_state.selected_youtuber}'입니다.
+사용자의 연애 고민에 대해 따뜻하고 공감적인 상담을 해주세요."""
+            
             if context:
                 user_content = f"[사용자 고민]\n{prompt}\n\n[참고 사례]\n{context}"
             else:
                 user_content = f"[사용자 고민]\n{prompt}\n\n(참고 사례 없음 - 일반적인 상담으로 답변해주세요)"
         else:
-            # 💬 일상 대화 모드 (RAG 사용 안함)
-            system_prompt = """당신은 친근하고 다정한 '하트 박사'입니다.
+            # 💬 일상 대화 모드 (RAG 사용 안함, 선택된 유튜버 페르소나 적용)
+            persona_prompt = get_combined_prompt(st.session_state.selected_youtuber)
+            if persona_prompt:
+                # 페르소나 프롬프트에 일상 대화용 지시 추가
+                system_prompt = f"""{persona_prompt}
+
+[추가 지시사항]
+지금은 일상 대화 상황입니다. 위의 페르소나 스타일과 말투를 유지하면서 편안하게 대화하세요.
+연애 상담이 필요하면 언제든 물어보라고 친절하게 안내해주세요."""
+            else:
+                system_prompt = f"""당신은 친근하고 다정한 '{st.session_state.selected_youtuber}'입니다.
 사용자와 편안하게 일상 대화를 나누세요. 유머러스하고 따뜻한 말투로 대화해주세요.
 연애 상담이 필요하면 언제든 물어보라고 친절하게 안내해주세요."""
             user_content = prompt

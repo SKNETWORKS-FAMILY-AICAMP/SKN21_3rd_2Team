@@ -83,25 +83,6 @@ def main():
     # 1. LLM 초기화
     llm = init_llm()
     print(f"\n✓ LLM 초기화 완료: {Config.MODEL_NAME}")
-
-    # 2. 리트리버 설정
-    # client = QdrantClient(
-    #     url=Config.QDRANT_URL,
-    #     api_key=Config.QDRANT_API_KEY
-    # )
-    
-    # embeddings = OpenAIEmbeddings(
-    #     model="text-embedding-3-small",
-    #     openai_api_key=Config.OPENAI_API_KEY
-    # )
-    
-    # vectorstore = QdrantVectorStore(
-    #     client=client,
-    #     collection_name=Config.COLLECTION_NAME,
-    #     embedding=embeddings
-    # )
-    
-    # retriever = get_retriever(vectorstore, search_type="similarity", k=5)
     
     # logic.py의 operate_retriever를 사용하여 검색 수행
     retriever = RunnableLambda(lambda q: operate_retriever(q, k=1, verbose=True) or [])

@@ -158,23 +158,23 @@ def operate_retriever(query_text, k=3, verbose=False):
             print("Qdrant에서 텍스트 payload를 찾지 못함.")
             return []
 
-        mmr_docs = mmr(query_vector, np.array(vectors), docs, k=10)
+        mmr_docs = mmr(query_vector, np.array(vectors), docs, k=k)
 
-        bm25_docs = bm25_search(query_text, docs, k=10)
-        hybrid_docs = mmr_docs + bm25_docs
+        # bm25_docs = bm25_search(query_text, docs, k=10)
+        # hybrid_docs = mmr_docs + bm25_docs
         
-        pairs = [[query_text, d.page_content] for d in hybrid_docs]
-        scores = reranker.predict(pairs)
+        # pairs = [[query_text, d.page_content] for d in hybrid_docs]
+        # scores = reranker.predict(pairs)
 
-        ranked = sorted(zip(scores, hybrid_docs), key=lambda x: x[0], reverse=True)
+        # ranked = sorted(zip(scores, hybrid_docs), key=lambda x: x[0], reverse=True)
         
-        if verbose:
-            print(f"Developer Mode:")
-            print("=" * 50)
-            print(f"[retriever] ranked: {ranked}")
-            print(f"len(ranked): {len(ranked)}")
-        final_docs = [d for _, d in ranked[:k]]
-        return final_docs
+        # if verbose:
+        #     print(f"Developer Mode:")
+        #     print("=" * 50)
+        #     print(f"[retriever] ranked: {ranked}")
+        #     print(f"len(ranked): {len(ranked)}")
+        # final_docs = [d for _, d in ranked[:k]]
+        return mmr_docs
 
     except Exception as e:
         print(f"Error: {e}")

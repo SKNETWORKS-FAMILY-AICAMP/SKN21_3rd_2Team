@@ -3,13 +3,56 @@
 - ## 팀명 : **명짝**
 - ### 팀원 소개 :
 
-<div align="center">
-	
-| [김승룡] | [정덕규] | [이의정] | [진승언] | [이명준] |
-| :----------------------------------------: | :----------------------------------------: | :----------------------------------------: | :----------------------------------------: | :----------------------------------------: |
-| <img src="data/image/BSJ.png" width="120"> | <img src="data/image/PSH.png" width="120"> | <img src="data/image/LSW.png" width="120"> | <img src="data/image/KSU.png" width="120"> | <img src="data/image/PJH.png" width="120"> |
+<table>
+<tr>
 
-</div>
+<!-- 김승룡 -->
+<td align="center" width="200" style="vertical-align: top; padding: 15px;">
+  <h3 style="margin: 10px 0 5px 0;">김승룡</h3>
+  <p style="margin: 5px 0;">프롬프트 엔지니어링 (페르소나 설정, 답변 스타일 조정), README 작성</p>
+  <a>
+    <img width="780" height="1200" alt="image" src="https://github.com/user-attachments/assets/380a6eb5-2175-4398-9ef6-f16a8dfe836a" />
+  </a>
+</td>
+
+<!-- 정덕규 -->
+<td align="center" width="200" style="vertical-align: top; padding: 15px;">
+  <h3 style="margin: 10px 0 5px 0;">정덕규</h3>
+  <p style="margin: 5px 0;">Retrieval(검색) 로직 구현 (유사도 검색, MMR 등)</p>
+  <a>
+    <img width="252" height="204" alt="image" src="https://github.com/user-attachments/assets/e7def1d2-a95b-4f7b-a513-bf1da56a2dd6" />
+  </a>
+</td>
+
+<!-- 이의정 -->
+<td align="center" width="200" style="vertical-align: top; padding: 15px;">
+  <h3 style="margin: 10px 0 5px 0;">이의정</h3>
+  <p style="margin: 5px 0;">Vector DB Engineer, streamlit 구현</p>
+  <a>
+    <img width="252" height="204" alt="image" src="https://github.com/user-attachments/assets/aa63258d-2caf-48ee-b1ed-7485f80ab58d" />
+  </a>
+</td>
+
+<!-- 진승언 -->
+<td align="center" width="200" style="vertical-align: top; padding: 15px;">
+  <h3 style="margin: 10px 0 5px 0;">진승언</h3>
+  <p style="margin: 5px 0;">데이터엔지니어 + 환각(Hallucination) 제어 및 답변 테스트</p>
+  <a>
+    <img width="252" height="204" alt="image" src="https://github.com/user-attachments/assets/045f7d1f-5d7e-4c1f-97bd-09646aacbb5b" />
+  </a>
+</td>
+
+<!-- 이명준 -->
+<td align="center" width="200" style="vertical-align: top; padding: 15px;">
+  <h3 style="margin: 10px 0 5px 0;">이명준</h3>
+  <p style="margin: 5px 0;">RAG retrieval 로직, LLM 모델 선정 및 LangChain 파이프라인(Chain) 구성 </p>
+  <a>
+    <img width="512" height="512" alt="image" src="https://github.com/user-attachments/assets/fdce2560-003c-4fb4-af5a-f7f1c3349a70" />
+  </a>
+</td>
+
+</tr>
+</table>
 
 <br>
 
@@ -71,7 +114,7 @@
     
 3.  **RAG 기반 정확성 향상**: GPT-4o-mini + Qdrant으로 근거 기반 답변 생성
     
-4.  **명준(님), 의정(님) 짝꿍 구하기**: 명준(님)과 의정(님)의 여자친구, 남자친구를 구하는 것이 최종적인 프로젝트의 목적 입니다.
+4.  **명준(님), 의정(님) 짝꿍 구하기**: 명준(님)의 여자친구, 의정(님)의 남자친구를 구하는 것이 최종적인 프로젝트의 목적
 
 <br>
 
@@ -98,7 +141,8 @@
 
 ### 프로젝트 구조
 
-<img src="https://discord.com/channels/1455821809193713686/1455836066329264191/1458260754330292443">
+<img width="600" height="400" alt="project_struct" src="https://github.com/user-attachments/assets/bf13e19d-902e-410e-b711-208b94098379" />
+
 
 <br>
 
@@ -106,7 +150,19 @@
 ### 시스템 아키텍처 구조도
 ![시스템 아키텍처]()
 
+### 프로젝트 동적 과정
+**1. Preprocessing**: 국내 연애 유튜버 관련 유튜브 콘텐츠들의 음성을 텍스트로 변환하여 JSON 형태로 제작 후 Qdrant를 이용하여 Vector DB로 저장
 
+**2. Retrieval**: BM25, MMR, ReRank을 활용하여 Hybrid 형태로 검색 구현. 
+- Vector DB에 저장된 메타데이터의 항목들을 Payload로 호출하여 Document 형태로 로컬에 저장. 
+- MMR과 BM25을 Hybrid로 계산 후 이를 Cross-Encoder 기반 ReRanker로 활용함
+
+**3. Prompt**: 각 유튜버의 시스템 프롬프트를 만들 때 ChatGPT를 사용하였고 챗봇에 적용할 때 전체 시스템 프롬프트로 저장함. <br>
+이를 통하여 사용자는 원하는 스타일의 유튜버를 선택하여 이에 유튜버의 어조, 성향, 말투로 답변 받을 수 있음. 
+
+**4. Chain**: LLM 모델의 config 초기 설정 기반으로 검색된 문서들을 하나의 문자열로 결합. Retriever와 prompt를 입력받아 RAG 파이프라인을 구성. <br>
+Context와 Question을 병렬로 처리하여 프롬프트에 전달하면 전체 체인을 구성할 수 있음.
+(순서: Retrieval -> Prompt -> LLM -> OutputParser)
 
 
 <br>
@@ -135,6 +191,11 @@
 # 💾DB 연동
 
 Vectorstore는 수업 시간에 배운 Qdrant를 이용
+
+Collection에 JSON 형식으로 저장하였고 클라이언트가 호출하고 싶은 경우 payload로 부를 수 있음
+Vector DB에는 metadata 키로 맵핑하여 qdrant api에서 부를 때 document 형식에 맞게 객체를 생성
+
+<img width="700" height="300" alt="image" src="https://github.com/user-attachments/assets/624fa771-7960-4bb5-b1a2-0c528b0ed093" />
 
 <br>
 
@@ -243,9 +304,10 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 |----------|-------------|
 | 김승룡 |  이번에 시스템 프롬프트를 만들면서, 프롬프트 엔지니어링이라는 것을 처음으로 해봤는데, chatgpt의 답변이 작은 문장의 변화에도 점점 구체화되고 고도화되는 것을 보고 신기하고 재미있었습니다. |
 | 정덕규 |  이번에 Chatbot의 RAG의 중요한 Retrieval(검색) 부분을 담당하면서 실습으로 구현한 것 외에 느낀 점이 많았습니다. 최적의 성능을 도출하기 위해 Hybrid 방법으로도 시도하였으나 성능 저하 및 중복값이 발견되는 경우가 있었습니다. 처음에 단순한 검색 구현이라서 메소드만 호출하면 된다고 생각했었으나 Qdrant의 JSON으로 저장된 metadata를 payload를 해야 했고 Langchain UI를 직접 모니터링하면서 비교 분석을 하면서 다각도로 Retrieval에 대한 인사이트를 키울 수 있었습니다. 팀원들의 적극적인 도움으로 설계 및 구현에 대한 시각이 달라졌고 앞으로 이 시점에서 어떻게 개선해 나가야할지 목표가 보였습니다. 
-| 이의정 |  |
+| 이의정 |  이번 프로젝트를 통해서 챗봇의 내부흐름을 제대로 알게되었고 성능개선을 하면서 많은 부분을 배웠던 시간이였던 거 같습니다. |
 | 진승언 |  |
 | 이명준 |  |
+
 
 
 

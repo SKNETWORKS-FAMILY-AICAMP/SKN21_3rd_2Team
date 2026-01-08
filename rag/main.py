@@ -9,7 +9,9 @@ if PROJECT_ROOT not in sys.path:
 
 from rag.config import Config
 from rag.prompts.templates import get_persona_prompt, PERSONA_FILE_MAP
-from rag.retriever.logic import get_retriever, print_retriever_results
+# from rag.retriever.logic import get_retriever, print_retriever_results
+from rag.retriever.logic import operate_retriever
+from langchain_core.runnables import RunnableLambda
 from rag.chain.pipeline import init_llm, create_chain
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
@@ -79,23 +81,26 @@ def main():
     print(f"\n✓ LLM 초기화 완료: {Config.MODEL_NAME}")
 
     # 2. 리트리버 설정
-    client = QdrantClient(
-        url=Config.QDRANT_URL,
-        api_key=Config.QDRANT_API_KEY
-    )
+    # client = QdrantClient(
+    #     url=Config.QDRANT_URL,
+    #     api_key=Config.QDRANT_API_KEY
+    # )
     
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=Config.OPENAI_API_KEY
-    )
+    # embeddings = OpenAIEmbeddings(
+    #     model="text-embedding-3-small",
+    #     openai_api_key=Config.OPENAI_API_KEY
+    # )
     
-    vectorstore = QdrantVectorStore(
-        client=client,
-        collection_name=Config.COLLECTION_NAME,
-        embedding=embeddings
-    )
+    # vectorstore = QdrantVectorStore(
+    #     client=client,
+    #     collection_name=Config.COLLECTION_NAME,
+    #     embedding=embeddings
+    # )
     
-    retriever = get_retriever(vectorstore, search_type="similarity", k=5)
+    # retriever = get_retriever(vectorstore, search_type="similarity", k=5)
+    
+    # logic.py의 operate_retriever를 사용하여 검색 수행
+    retriever = RunnableLambda(lambda q: operate_retriever(q, k=5) or [])
     print("✓ 리트리버 초기화 완료")
 
     # 3. 유튜버 선택

@@ -1,2 +1,20 @@
+# 가상환경
+.venv
+
+# cache
+
 .env
-*.txt
+# *.txt
+__pycache__/
+raw_data/
+
+# test
+test/
+
+# docs
+docs/
+
+# raw_data
+data/point_ids.txt
+data/temp_audio_raw_script.txt
+data/url_list.txt

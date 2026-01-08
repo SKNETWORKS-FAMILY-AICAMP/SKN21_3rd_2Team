@@ -1,3 +1,4 @@
+
 import os
 import uuid
 import json
@@ -20,17 +21,23 @@ load_dotenv()
 
 # API 클라이언트 설정
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-# Use Qdrant Cloud API key when provided
-qdrant = QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"))
+qdrant = QdrantClient(
+    url=os.getenv("QDRANT_URL"),
+    api_key=os.getenv("QDRANT_API_KEY") # 클라이언트 생성 시 키를 전달해야 합니다.
+)
 
 # ==========================================
 # [PART 1] 유튜브 오디오 다운로드 및 STT (무료/로컬)
 # ==========================================
 
 def download_audio_from_youtube(url: str, output_path="temp_audio") -> str | None:
-    """유튜브 영상을 MP3로 다운로드합니다."""
+    # 1번에서 설치한 실제 경로를 직접 입력
+    MY_FFMPEG_PATH = r"C:\ffmpeg\bin" 
+
     ydl_opts = {
         'format': 'bestaudio/best',
+        # yt-dlp에게 엔진 위치를 강제로 알려줌
+        'ffmpeg_location': MY_FFMPEG_PATH, 
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -40,6 +47,14 @@ def download_audio_from_youtube(url: str, output_path="temp_audio") -> str | Non
         'quiet': True,
     }
     
+    print(f"📥 [1/4] 오디오 다운로드 중... ({url})")
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        return f"{output_path}.mp3"
+    except Exception as e:
+        print(f"❌ 다운로드 실패: {e}")
+        return None
     print(f"📥 [1/4] 오디오 다운로드 중... ({url})")
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -80,7 +95,7 @@ class ContentBody(BaseModel):
 
 class ContextMetadata(BaseModel):
     advisor_style: str = Field(description="상담 스타일 예: 직설, 공감, 분석적")
-    mbti_pair: List[str] = Field(description="언급된 경우 MBTI 조합, 없으면 비워둠")
+    mbti_pair: List[str] = Field(description="언급된 경우 MBTI 조합, 없으면 추론하거나 비워둠")
     risk_level: str = Field(description="관계 위험도: 낮음, 중간, 높음, 매우 높음")
 
 class CounselingData(BaseModel):
@@ -151,89 +166,32 @@ def upload_to_qdrant(collection_name: str, structured_data: CounselingData):
 # ==========================================
 
 if __name__ == "__main__":
-    url_list = list()
-    # 1. 분석할 유튜브 URL 리스트 입력
-    url_list.extend(
-        [
-            # 승룡
-            "https://www.youtube.com/watch?v=ahjfeeDXvkU",
-            "https://www.youtube.com/watch?v=jOuRvDJXqRg",
-            "https://www.youtube.com/watch?v=yPN1sZI8mcE",
-            "https://www.youtube.com/watch?v=WNfYx5-R3iI",
-            "https://www.youtube.com/watch?v=Z6uMDiX4tF8",
-            "https://www.youtube.com/watch?v=GTEKLzTo7dc",
-            "https://www.youtube.com/watch?v=tGqjVKf7lF0",
-            "https://www.youtube.com/watch?v=usxCVVkLj24&t=2s",
-            "https://www.youtube.com/watch?v=NOrYt5t58Oc",
-            "https://www.youtube.com/watch?v=WDuz1HBtZ2w",
-            "https://www.youtube.com/watch?v=w9FfuvZZksg",
-            "https://www.youtube.com/watch?v=l1SmTren1Nk",
-            "https://www.youtube.com/watch?v=KGZKtaz957s",
-            "https://www.youtube.com/watch?v=0wB3-GOihaQ",
-            "https://www.youtube.com/watch?v=GwA7EPDkCXs",
-            "https://www.youtube.com/watch?v=3ed7zZ7Zm70",
-            "https://www.youtube.com/watch?v=IxGRtr8L0WQ",
-            "https://www.youtube.com/watch?v=HOoMZpDZpOk",
-            "https://www.youtube.com/watch?v=5fwgst84w5w",
-            "https://www.youtube.com/watch?v=X3eOrHP_qrY",
-            "https://www.youtube.com/watch?v=K_USnheqcjk",
-            "https://www.youtube.com/watch?v=zVOYm-nBpOo",
-            "https://www.youtube.com/watch?v=wCyE2zmik6Y",
-            "https://www.youtube.com/watch?v=C1P5LDIgz98",
-            "https://www.youtube.com/watch?v=AdO_3vGpNG4",
-            "https://www.youtube.com/watch?v=XXbZAWJ1OdU",
-            "https://www.youtube.com/watch?v=qqXQCxrYmig",
-            "https://www.youtube.com/watch?v=1h3ZoyinpUc",
-            "https://www.youtube.com/watch?v=w1LUIMhrRw4",
-            "https://www.youtube.com/watch?v=ewhtaV1OXy0",
-            "https://www.youtube.com/watch?v=fbh6PCMRAnc",
-            "https://www.youtube.com/watch?v=QmcdMjM3Edw",
-            "https://www.youtube.com/watch?v=rlGvmT8uoJE",
-            "https://www.youtube.com/watch?v=qR9n8CLwpIg",
-            "https://www.youtube.com/watch?v=jOxwCshjyZo",
-            "https://www.youtube.com/watch?v=yEuCrea0zfo",
-            "https://www.youtube.com/watch?v=CwB_AD2wnTw",
-            "https://www.youtube.com/watch?v=sznBwru-_rg",
-            "https://www.youtube.com/watch?v=gPflDEnKgSc",
-            "https://www.youtube.com/watch?v=QeDED_HRl10"
-        ]
-    )
+    # 1. FFmpeg 엔진이 들어있는 폴더 경로를 지정하세요.
+    # 예: C드라이브 바로 아래 ffmpeg 폴더를 만드셨다면 아래와 같습니다.
+    FFMPEG_PATH = r"C:\ffmpeg\bin" 
 
-    for target_url in url_list:
-        # 2. 오디오 다운로드
-        audio_file = download_audio_from_youtube(target_url)
-        
-        if audio_file and os.path.exists(audio_file):
-            try:
-                # 3. STT 변환 (Local Whisper)
-                raw_script = transcribe_with_local_whisper(audio_file, model_size="base")
-                
-                if raw_script:
-                    print(f"\n--- 추출된 텍스트 길이: {len(raw_script)} 자 ---")
-                    # raw_script를 텍스트 파일로 저장 (검토용)
-                    txt_path = os.path.splitext(audio_file)[0] + "_raw_script.txt"
-                    try:
-                        with open(txt_path, "w", encoding="utf-8") as f:
-                            f.write(raw_script)
-                        print(f"📄 Raw script saved to {txt_path}")
-                    except Exception as e:
-                        print(f"⚠️ Failed to save raw script: {e}")
-                    
-                    # 4. 데이터 구조화 (GPT-4o)
-                    structured_data = extract_structured_data(raw_script)
-                    
-                    # 확인용 출력
-                    print(json.dumps(structured_data.model_dump(by_alias=True), indent=2, ensure_ascii=False))
-                    
-                    # 5. DB 저장
-                    upload_to_qdrant("love_counseling_db", structured_data)
-                    
-                else:
-                    print("❌ 스크립트 추출 실패")
+    # 2. 시스템 환경 변수(PATH)에 이 경로를 최우선으로 추가합니다.
+    # 이렇게 하면 Whisper가 내부적으로 ffprobe를 찾을 때 이 폴더를 뒤지게 됩니다.
+    os.environ["PATH"] = FFMPEG_PATH + os.pathsep + os.environ["PATH"]
+    
+    # 3. 분석할 유튜브 주소
+    TARGET_URL = "https://www.youtube.com/watch?v=p1oZlTKbOJs" 
 
-            finally:
-                # 임시 파일 삭제
-                if os.path.exists(audio_file):
-                    os.remove(audio_file)
-        else:
-            print("❌ 오디오 파일 준비 실패")
+    
+    # 4. 파이프라인 실행
+    audio_file = download_audio_from_youtube(TARGET_URL)
+    
+    if audio_file and os.path.exists(audio_file):
+        try:
+            # 이제 WinError 2 없이 통과합니다!
+            raw_script = transcribe_with_local_whisper(audio_file)
+            
+            if raw_script:
+                print(f"✅ 추출 성공! 텍스트 길이: {len(raw_script)}")
+                structured_data = extract_structured_data(raw_script)
+                upload_to_qdrant("love_counseling_db", structured_data)
+        finally:
+            if os.path.exists(audio_file):
+                os.remove(audio_file)
+    else:
+        print("❌ 오디오 파일 준비 실패")

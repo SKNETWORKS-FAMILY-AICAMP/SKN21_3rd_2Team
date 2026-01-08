@@ -1,0 +1,14 @@
+python-dotenv
+langchain
+langchain-core
+langchain-openai
+langchain-community
+langchain-qdrant
+openai
+pydantic
+torch
+openai-whisper
+yt-dlp
+qdrant-client
+youtube-transcript-api
+

@@ -4,7 +4,7 @@
 # cache
 
 .env
-*.txt
+# *.txt
 __pycache__/
 raw_data/
 

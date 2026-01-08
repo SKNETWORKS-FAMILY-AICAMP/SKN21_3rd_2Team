@@ -161,7 +161,7 @@
 Context와 Question을 병렬로 처리하여 프롬프트에 전달하면 전체 체인을 구성할 수 있음.
 (순서: Retrieval -> Prompt -> LLM -> OutputParser)
 
-### 시스템 아키텍처 구조
+### 데이터 전처리 및 DB upsert 파이프라인 구조
 <img width="2752" height="1536" alt="ETL_Pipeline" src="https://github.com/user-attachments/assets/2ebd94af-e499-45f7-834c-1fecb6fe91cc" />
 
 
@@ -308,6 +308,7 @@ chatgpt를 이용하여 해당 유튜버들에 대한 시스템 프롬프트 생
 | 이의정 |  이번 프로젝트를 통해서 챗봇의 내부흐름을 제대로 알게되었고 성능개선을 하면서 많은 부분을 배웠던 시간이였던 거 같습니다. |
 | 진승언 | 챗봇 성능 평가 및 프롬프트 엔지니어링이 굉장히 까다로움을 느꼈습니다. |
 | 이명준 |  |
+
 
 
 

@@ -7,6 +7,10 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+# Windows 콘솔에서 출력이 늦게 보이거나 깨지는 문제를 줄이기 위해 UTF-8과 라인 버퍼링 설정
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
+
 from rag.config import Config
 from rag.prompts.templates import get_persona_prompt, PERSONA_FILE_MAP
 # from rag.retriever.logic import get_retriever, print_retriever_results
@@ -100,7 +104,7 @@ def main():
     # retriever = get_retriever(vectorstore, search_type="similarity", k=5)
     
     # logic.py의 operate_retriever를 사용하여 검색 수행
-    retriever = RunnableLambda(lambda q: operate_retriever(q, k=5) or [])
+    retriever = RunnableLambda(lambda q: operate_retriever(q, k=1, verbose=True) or [])
     print("✓ 리트리버 초기화 완료")
 
     # 3. 유튜버 선택

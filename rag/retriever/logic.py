@@ -116,8 +116,10 @@ def pretty_print_docs(docs):
         print(d.page_content[:400], "...\n")
 
 
-def operate_retriever(query_text, k=3):
-    print(f"--- 🔍 질문: '{query_text}' ---")
+def operate_retriever(query_text, k=3, verbose=False):
+    # verbose 모드에서만 질의 내용을 출력해 터미널 중복 출력을 방지
+    if verbose:
+        print(f"[retriever] query: {query_text}")
 
     try:
         client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
@@ -127,7 +129,7 @@ def operate_retriever(query_text, k=3):
         resp = client.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector.tolist(),
-            limit=40,
+            limit=20,
             with_payload=True,
             with_vectors=True,
         )
@@ -142,22 +144,30 @@ def operate_retriever(query_text, k=3):
 
             docs.append(Document(page_content=text,
                     metadata={"retrieval": payload.get("retrieval"),
-                              "context": payload.get("context"),"id": p.id,"score": p.score}))
+                              "context": payload.get("context"),
+                              "id": p.id,
+                              "score": p.score}))
             vectors.append(p.vector)
 
         if len(docs) == 0:
             print("Qdrant에서 텍스트 payload를 찾지 못함.")
             return []
 
-        mmr_docs = mmr(query_vector, np.array(vectors), docs, k=12)
+        mmr_docs = mmr(query_vector, np.array(vectors), docs, k=10)
 
-        bm25_docs = bm25_search(query_text, docs, k=12)
+        bm25_docs = bm25_search(query_text, docs, k=10)
         hybrid_docs = mmr_docs + bm25_docs
-
+        
         pairs = [[query_text, d.page_content] for d in hybrid_docs]
         scores = reranker.predict(pairs)
 
         ranked = sorted(zip(scores, hybrid_docs), key=lambda x: x[0], reverse=True)
+        
+        if verbose:
+            print(f"Developer Mode:")
+            print("=" * 50)
+            print(f"[retriever] ranked: {ranked}")
+            print(f"len(ranked): {len(ranked)}")
         final_docs = [d for _, d in ranked[:k]]
         return final_docs
 
@@ -168,106 +178,6 @@ def operate_retriever(query_text, k=3):
         return None
 
 
-if __name__ == "__main__":
-    query = "첫사랑이 계속 생각나서 새로운 사람을 못 만나겠어요"
-    docs = operate_retriever(query, k=3)
-    pretty_print_docs(docs)
-
-
-# def get_retriever(vector_store, search_type="similarity", k=4):
-#     """
-#     팀원 3이 구현할 검색 로직 (유사도 검색, MMR 등)
-#     """
-
-
-
-
-# def run_retriever_example(query_text, k=3):
-#     """
-#     Retriever 베이스 로직
-#     """
-#     print(f"--- 🔍 질문: '{query_text}' ---")
-
-#     try:
-#         # 1. Qdrant / Embedding 객체 생성
-#         client = QdrantClient(
-#             url=Config.QDRANT_URL,
-#             api_key=Config.QDRANT_API_KEY
-#         )
-
-#         embeddings = OpenAIEmbeddings(
-#             model="text-embedding-3-small",
-#             openai_api_key=Config.OPENAI_API_KEY
-#         )
-
-#         # 2. 질문 → 벡터
-#         query_vector = embeddings.embed_query(query_text)
-
-#         # 3. 벡터 유사도 검색
-#         response = client.query_points(
-#             collection_name=Config.COLLECTION_NAME,
-#             query=query_vector,
-#             limit=k,
-#             with_payload=True
-#         )
-
-#         return response  # QueryResponse 반환
-
-#     except Exception as e:
-#         print(f"🔥 에러 발생: {e}")
-#         return None
-
-# def print_retriever_results(query_text, k=3):
-#     """
-#     Retriever 결과를 상세하게 터미널에 출력하는 함수
-#     Args:
-#         query_text: 질문 텍스트
-#         k: 검색 결과 개수
-#     """
-#     # run_retriever_example로 검색 수행
-#     response = run_retriever_example(query_text, k=k)
-    
-#     if not response or not response.points:
-#         print("❌ 검색 결과가 없습니다.")
-#         return
-    
-#     print(f"\n✅ 총 {len(response.points)}개의 관련 문서를 찾았습니다.\n")
-#     print("=" * 80)
-    
-#     for i, point in enumerate(response.points, 1):
-#         payload = point.payload or {}
-#         content_box = payload.get("content", {})
-        
-#         # 문서 정보 추출
-#         situation = content_box.get("situation_summary", "내용 없음")
-#         advice = content_box.get("key_advice", [])
-        
-#         # advice 리스트를 문자열로 변환
-#         if isinstance(advice, list):
-#             advice_str = "\n   • ".join(advice) if advice else "조언 없음"
-#         else:
-#             advice_str = str(advice)
-        
-#         # 결과 출력
-#         print(f"\n📄 문서 #{i} (유사도 점수: {point.score:.4f})")
-#         print("-" * 80)
-#         print(f"📌 상황 요약:")
-#         print(f"   {situation}")
-#         print(f"\n💡 핵심 조언:")
-#         print(f"   • {advice_str}")
-        
-#         # 추가 메타데이터가 있다면 출력
-#         if payload.get("metadata"):
-#             print(f"\n📊 추가 정보: {payload.get('metadata')}")
-        
-#         # 디버깅용 - content_box가 비어있으면 전체 payload 출력
-#         if not content_box:
-#             print(f"\n⚠️ [디버깅] 전체 Payload: {payload}")
-        
-#         print("=" * 80)
-    
-#     print()
-#     return response
 
 
 

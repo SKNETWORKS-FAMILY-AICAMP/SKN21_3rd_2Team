@@ -9,6 +9,8 @@ if project_root not in sys.path:
 
 from rag.config import Config
 from qdrant_client import QdrantClient
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 
 import os
 from langchain_openai import OpenAIEmbeddings
@@ -28,6 +30,23 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 COLLECTION_NAME = "love_counseling_db"
 reranker = CrossEncoder("BAAI/bge-reranker-v2-m3")
+
+def rewrite_query(original_query):
+    """
+    사용자의 질문을 검색에 최적화된 형태로 재작성합니다.
+    """
+    llm = ChatOpenAI(model="gpt-4o-mini", openai_api_key=OPENAI_API_KEY)
+    
+    # 📝 연애 상담 데이터셋의 특성에 맞춘 프롬프트 설정
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "당신은 질문 재작성 전문가입니다. 사용자의 질문을 검색 엔진이 연애 상담 사례 데이터베이스에서 가장 유사한 사례를 잘 찾을 수 있도록 더 구체적이고 명확한 문장으로 한 줄만 재작성하세요."),
+        ("human", f"원래 질문: {original_query}")
+    ])
+    
+    chain = prompt | llm
+    rewritten_query = chain.invoke({}).content
+    print(f"🔄 재작성된 질문: {rewritten_query}") # 디버깅용
+    return rewritten_query
 
 
 def bm25_search(query, corpus_docs, k=3):
@@ -116,13 +135,74 @@ def pretty_print_docs(docs):
         print(d.page_content[:400], "...\n")
 
 
+# def operate_retriever(query_text, k=3):
+#     print(f"--- 🔍 질문: '{query_text}' ---")
+
+#     try:
+#         client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+#         embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=OPENAI_API_KEY)
+#         query_vector = np.array(embeddings.embed_query(query_text))
+
+#         resp = client.query_points(
+#             collection_name=COLLECTION_NAME,
+#             query=query_vector.tolist(),
+#             limit=40,
+#             with_payload=True,
+#             with_vectors=True,
+#         )
+
+#         docs = []
+#         vectors = []
+#         for p in resp.points:
+#             payload = p.payload or {}
+#             text = build_text_from_payload(payload)
+#             if not text.strip():
+#                 continue
+
+#             docs.append(Document(page_content=text,
+#                     metadata={"retrieval": payload.get("retrieval"),
+#                               "context": payload.get("context"),"id": p.id,"score": p.score}))
+#             vectors.append(p.vector)
+
+#         if len(docs) == 0:
+#             print("Qdrant에서 텍스트 payload를 찾지 못함.")
+#             return []
+
+#         mmr_docs = mmr(query_vector, np.array(vectors), docs, k=12)
+
+#         bm25_docs = bm25_search(query_text, docs, k=12)
+#         hybrid_docs = mmr_docs + bm25_docs
+
+#         pairs = [[query_text, d.page_content] for d in hybrid_docs]
+#         scores = reranker.predict(pairs)
+
+#         ranked = sorted(zip(scores, hybrid_docs), key=lambda x: x[0], reverse=True)
+#         final_docs = [d for _, d in ranked[:k]]
+#         return final_docs
+
+
+
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return None
+
+
+# if __name__ == "__main__":
+#     query = "첫사랑이 계속 생각나서 새로운 사람을 못 만나겠어요"
+#     docs = operate_retriever(query, k=3)
+#     pretty_print_docs(docs)
 def operate_retriever(query_text, k=3):
-    print(f"--- 🔍 질문: '{query_text}' ---")
+    print(f"--- 🔍 원래 질문: '{query_text}' ---")
 
     try:
+        # 🚀 1. Query Rewriting 적용 (검색용 쿼리 생성)
+        search_query = rewrite_query(query_text)
+
         client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=OPENAI_API_KEY)
-        query_vector = np.array(embeddings.embed_query(query_text))
+        
+        # 🚀 2. 재작성된 쿼리로 벡터 생성
+        query_vector = np.array(embeddings.embed_query(search_query))
 
         resp = client.query_points(
             collection_name=COLLECTION_NAME,
@@ -149,29 +229,24 @@ def operate_retriever(query_text, k=3):
             print("Qdrant에서 텍스트 payload를 찾지 못함.")
             return []
 
+        # 🚀 3. MMR 검색 (재작성된 벡터 사용)
         mmr_docs = mmr(query_vector, np.array(vectors), docs, k=12)
 
-        bm25_docs = bm25_search(query_text, docs, k=12)
+        # 🚀 4. BM25 검색 (재작성된 텍스트 쿼리 사용)
+        bm25_docs = bm25_search(search_query, docs, k=12)
         hybrid_docs = mmr_docs + bm25_docs
 
-        pairs = [[query_text, d.page_content] for d in hybrid_docs]
+        # 🚀 5. Rerank (최종 랭킹은 원래 질문(query_text)과 비교하는 것이 의도 파악에 더 유리할 수 있음)
+        pairs = [[search_query, d.page_content] for d in hybrid_docs]
         scores = reranker.predict(pairs)
 
         ranked = sorted(zip(scores, hybrid_docs), key=lambda x: x[0], reverse=True)
         final_docs = [d for _, d in ranked[:k]]
         return final_docs
 
-
-
     except Exception as e:
         print(f"Error: {e}")
         return None
-
-
-if __name__ == "__main__":
-    query = "첫사랑이 계속 생각나서 새로운 사람을 못 만나겠어요"
-    docs = operate_retriever(query, k=3)
-    pretty_print_docs(docs)
 
 
 # def get_retriever(vector_store, search_type="similarity", k=4):

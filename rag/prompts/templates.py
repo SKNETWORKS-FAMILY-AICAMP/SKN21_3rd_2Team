@@ -26,7 +26,7 @@ PERSONA_FILE_MAP = {
     "홍차TV": "hong_cha_tv.txt",
     "홍차 TV": "hong_cha_tv.txt",
     "마튜브": "ma_tube.txt",
-    "오마르의 삶": None,  # 아직 구현되지 않음
+    "오마르의 삶": "omar_life.txt",  # 아직 구현되지 않음
 }
 
 

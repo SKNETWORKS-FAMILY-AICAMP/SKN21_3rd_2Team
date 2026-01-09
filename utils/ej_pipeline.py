@@ -1,3 +1,4 @@
+
 import os
 import uuid
 import json
@@ -15,23 +16,28 @@ from dotenv import load_dotenv
 # 경고 메시지 무시
 warnings.filterwarnings("ignore")
 
-# 1. 환경 변수 로딩 (utils 폴더 기준 상위 디렉토리의 .env 파일 로드)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-load_dotenv(os.path.join(BASE_DIR, ".env"))
+# 1. 환경 변수 로딩
+load_dotenv()
 
 # API 클라이언트 설정
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-# Use Qdrant Cloud API key when provided
-qdrant = QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"))
+qdrant = QdrantClient(
+    url=os.getenv("QDRANT_URL"),
+    api_key=os.getenv("QDRANT_API_KEY") # 클라이언트 생성 시 키를 전달해야 합니다.
+)
 
 # ==========================================
 # [PART 1] 유튜브 오디오 다운로드 및 STT (무료/로컬)
 # ==========================================
 
 def download_audio_from_youtube(url: str, output_path="temp_audio") -> str | None:
-    """유튜브 영상을 MP3로 다운로드합니다."""
+    # 1번에서 설치한 실제 경로를 직접 입력
+    MY_FFMPEG_PATH = r"C:\ffmpeg\bin" 
+
     ydl_opts = {
         'format': 'bestaudio/best',
+        # yt-dlp에게 엔진 위치를 강제로 알려줌
+        'ffmpeg_location': MY_FFMPEG_PATH, 
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -41,30 +47,34 @@ def download_audio_from_youtube(url: str, output_path="temp_audio") -> str | Non
         'quiet': True,
     }
     
-    print(f"[1/4] 오디오 다운로드 중... ({url})")
+    print(f"📥 [1/4] 오디오 다운로드 중... ({url})")
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         return f"{output_path}.mp3"
     except Exception as e:
-<<<<<<< HEAD
         print(f"❌ 다운로드 실패: {e}")
-=======
-        print(f"[오류] 다운로드 실패: {e}")
->>>>>>> 20b96e91717dbf17479bcf26d1bc00347a421dcd
+        return None
+    print(f"📥 [1/4] 오디오 다운로드 중... ({url})")
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        return f"{output_path}.mp3"
+    except Exception as e:
+        print(f"❌ 다운로드 실패: {e}")
         return None
 
 def transcribe_with_local_whisper(audio_path: str, model_size="base") -> str | None:
     """로컬 Whisper 모델을 사용하여 오디오를 텍스트로 변환합니다."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"[2/4] STT 변환 중... (장치: {device}, 모델: {model_size})")
+    print(f"⚙️ [2/4] STT 변환 중... (장치: {device}, 모델: {model_size})")
     
     try:
         model = whisper.load_model(model_size, device=device)
         result = model.transcribe(audio_path, fp16=(device == "cuda"))
         return result["text"]
     except Exception as e:
-        print(f"[오류] STT 변환 실패: {e}")
+        print(f"❌ STT 변환 실패: {e}")
         return None
 
 # ==========================================
@@ -85,7 +95,7 @@ class ContentBody(BaseModel):
 
 class ContextMetadata(BaseModel):
     advisor_style: str = Field(description="상담 스타일 예: 직설, 공감, 분석적")
-    mbti_pair: List[str] = Field(description="언급된 경우 MBTI 조합, 없으면 비워둠")
+    mbti_pair: List[str] = Field(description="언급된 경우 MBTI 조합, 없으면 추론하거나 비워둠")
     risk_level: str = Field(description="관계 위험도: 낮음, 중간, 높음, 매우 높음")
 
 class CounselingData(BaseModel):
@@ -99,7 +109,7 @@ class CounselingData(BaseModel):
 
 def extract_structured_data(raw_transcript: str) -> CounselingData:
     """GPT-4o를 사용하여 Raw Text를 JSON 구조로 변환합니다."""
-    print("[3/4] 스크립트 구조화 분석 중 (GPT-4o)...")
+    print("🧠 [3/4] 스크립트 구조화 분석 중 (GPT-4o)...")
     completion = client.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
         messages=[
@@ -120,7 +130,7 @@ def get_embedding(text: str) -> List[float]:
 
 def upload_to_qdrant(collection_name: str, structured_data: CounselingData):
     """Qdrant에 데이터를 업로드합니다."""
-    print("[4/4] 벡터 DB 저장 중...")
+    print("💾 [4/4] 벡터 DB 저장 중...")
     
     if not qdrant.collection_exists(collection_name):
         qdrant.create_collection(
@@ -149,62 +159,39 @@ def upload_to_qdrant(collection_name: str, structured_data: CounselingData):
         collection_name=collection_name,
         points=[PointStruct(id=point_id, vector=vector, payload=payload_dict)]
     )
-    print(f"[완료] 업로드 완료! ID: {point_id}")
+    print(f"✅ 업로드 완료! ID: {point_id}")
 
 # ==========================================
 # [MAIN] 전체 파이프라인 실행
 # ==========================================
 
 if __name__ == "__main__":
-    # 1. 분석할 유튜브 URL 입력
-    TARGET_URL = "https://www.youtube.com/watch?v=S_LT81xK8LQ" # 테스트용 URL
+    # 1. FFmpeg 엔진이 들어있는 폴더 경로를 지정하세요.
+    # 예: C드라이브 바로 아래 ffmpeg 폴더를 만드셨다면 아래와 같습니다.
+    FFMPEG_PATH = r"C:\ffmpeg\bin" 
+
+    # 2. 시스템 환경 변수(PATH)에 이 경로를 최우선으로 추가합니다.
+    # 이렇게 하면 Whisper가 내부적으로 ffprobe를 찾을 때 이 폴더를 뒤지게 됩니다.
+    os.environ["PATH"] = FFMPEG_PATH + os.pathsep + os.environ["PATH"]
     
-<<<<<<< HEAD
-    # 2. 오디오 다운로드
-=======
     # 3. 분석할 유튜브 주소
-    TARGET_URL = "https://www.youtube.com/watch?v=NuJy1nbQnPEc" 
+    TARGET_URL = "https://www.youtube.com/watch?v=p1oZlTKbOJs" 
 
     
     # 4. 파이프라인 실행
->>>>>>> 20b96e91717dbf17479bcf26d1bc00347a421dcd
     audio_file = download_audio_from_youtube(TARGET_URL)
     
     if audio_file and os.path.exists(audio_file):
         try:
-            # 3. STT 변환 (Local Whisper)
-            raw_script = transcribe_with_local_whisper(audio_file, model_size="base")
+            # 이제 WinError 2 없이 통과합니다!
+            raw_script = transcribe_with_local_whisper(audio_file)
             
             if raw_script:
-<<<<<<< HEAD
-                print(f"\n--- 추출된 텍스트 길이: {len(raw_script)} 자 ---")
-                # raw_script를 텍스트 파일로 저장 (검토용)
-                txt_path = os.path.splitext(audio_file)[0] + "_raw_script.txt"
-                try:
-                    with open(txt_path, "w", encoding="utf-8") as f:
-                        f.write(raw_script)
-                    print(f"📄 Raw script saved to {txt_path}")
-                except Exception as e:
-                    print(f"⚠️ Failed to save raw script: {e}")
-                
-                # 4. 데이터 구조화 (GPT-4o)
-=======
-                print(f"[완료] 추출 성공! 텍스트 길이: {len(raw_script)}")
->>>>>>> 20b96e91717dbf17479bcf26d1bc00347a421dcd
+                print(f"✅ 추출 성공! 텍스트 길이: {len(raw_script)}")
                 structured_data = extract_structured_data(raw_script)
-                
-                # 확인용 출력
-                print(json.dumps(structured_data.model_dump(by_alias=True), indent=2, ensure_ascii=False))
-                
-                # 5. DB 저장
                 upload_to_qdrant("love_counseling_db", structured_data)
-                
-            else:
-                print("❌ 스크립트 추출 실패")
-
         finally:
-            # 임시 파일 삭제
             if os.path.exists(audio_file):
                 os.remove(audio_file)
     else:
-        print("[오류] 오디오 파일 준비 실패")
+        print("❌ 오디오 파일 준비 실패")
